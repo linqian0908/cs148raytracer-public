@@ -49,7 +49,7 @@ public:
         UpdateBoundingBox();
     }
 
-    virtual Box GetBoundingBox() override
+    virtual Box GetBoundingBox() const override
     {
         return boundingBox;
     }
@@ -67,6 +67,11 @@ public:
     virtual glm::vec3 GetVertexNormal(int index) const override
     {
         return normals[index];
+    }
+
+    virtual glm::vec2 GetVertexUV(int index) const override
+    {
+        return uvs[index];
     }
 
 protected:
