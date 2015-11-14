@@ -24,12 +24,13 @@ void RayTracer::Run()
     assert(currentScene && currentCamera && currentSampler && currentRenderer);
 
     currentSampler->InitializeSampler(storedApplication.get(), currentScene.get());
-    currentRenderer->InitializeRenderer();
 
     // Scene preprocessing -- generate acceleration structures, etc.
     // After this call, we are guaranteed that the "acceleration" member of the scene and all scene objects within the scene will be non-NULL.
     currentScene->GenerateDefaultAccelerationData();
     currentScene->Finalize();
+
+    currentRenderer->InitializeRenderer();
 
     // Prepare for Output
     const glm::vec2 currentResolution = storedApplication->GetImageOutputResolution();
@@ -41,7 +42,6 @@ void RayTracer::Run()
 
     for (int r = 0; r < static_cast<int>(currentResolution.y); ++r) {
         for (int c = 0; c < static_cast<int>(currentResolution.x); ++c) {
-
             imageWriter.SetPixelColor(currentSampler->ComputeSamplesAndColor(maxSamplesPerPixel, 2, [&](glm::vec3 inputSample) {
                 const glm::vec3 minRange(-0.5f, -0.5f, 0.f);
                 const glm::vec3 maxRange(0.5f, 0.5f, 0.f);
