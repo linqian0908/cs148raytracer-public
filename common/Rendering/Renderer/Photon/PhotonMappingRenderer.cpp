@@ -15,7 +15,7 @@
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000),
+    diffusePhotonNumber(1000),
     maxPhotonBounces(1000)
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -92,10 +92,8 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
             const MeshObject* hitMeshObject=state.intersectedPrimitive->GetParentMeshObject();
             const Material* hitMaterial=hitMeshObject->GetMaterial();
             glm::vec3 d=hitMaterial->GetBaseDiffuseReflection();
-            float pr=std::max(d.x,d.y);
-            pr=std::max(pr,d.z);
-            float r=std::rand()*1.f/RAND_MAX;
-            if (r<pr) {// scatter photon
+            float pr=std::max(std::max(d.x,d.y),d.z);
+            if ((std::rand()*1.f/RAND_MAX)<pr) {// scatter photon
                 // hemisphere sampling
                 float u1=std::rand()*1.f/RAND_MAX;
                 float u2=std::rand()*1.f/RAND_MAX;
@@ -103,25 +101,28 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
                 float theta=2*3.14159*u2;
                 float x=r*std::cos(theta);
                 float y=r*std::sin(theta);
-                float z=r*std::sqrt(1-u1);
+                float z=std::sqrt(1-u1);
                 // hemisphere ray transformation
                 glm::vec3 n=state.ComputeNormal();
                 glm::vec3 t;
                 glm::vec3 b;
-                if (n.x>0.9f) {
-                    t=glm::vec3(0.0,n.z,-n.y);
-                    b=glm::vec3(-n.z*n.z-n.y*n.y,n.x*n.y,n.x*n.z);
+                float Ntb;
+                if (n.x<0.9f) {
+                    Ntb=std::sqrt(1-n.x*n.x);
+                    t=glm::vec3(0.0,n.z/Ntb,-n.y/Ntb);
+                    b=glm::vec3((n.x*n.x-1)/Ntb,n.x*n.y/Ntb,n.x*n.z/Ntb);
                 }
                 else {
-                    t=glm::vec3(-n.z,0.0,n.x);
-                    b=glm::vec3(n.x*n.y,-n.x*n.x-n.z*n.z,n.z*n.y);
+                    Ntb=std::sqrt(1-n.y*n.y);
+                    t=glm::vec3(-n.z/Ntb,0.0,n.x/Ntb);
+                    b=glm::vec3(n.x*n.y/Ntb,(n.y*n.y-1)/Ntb,n.z*n.y/Ntb);
                 }
                 const glm::vec3 rayDirection=glm::normalize(glm::vec3(x*t.x+y*t.y+z*t.z,x*b.x+y*b.y+z*b.z,x*n.x+y*n.y+z*n.z));
                 photonRay->SetRayDirection(rayDirection);
                 const glm::vec3 rayPosition=intersectionPoint+n*LARGE_EPSILON;
                 photonRay->SetRayPosition(rayPosition);            
                 path.push_back('S');
-                PhotonMappingRenderer::TracePhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
+                TracePhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
            }
        }
    }         
