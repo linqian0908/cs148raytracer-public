@@ -28,12 +28,12 @@ std::shared_ptr<Ray> PerspectiveCamera::GenerateRayForNormalizedCoordinates(glm:
     return std::make_shared<Ray>(rayOrigin + rayDirection * zNear, rayDirection, zFar - zNear);
 }
 
-std::shared_ptr<Ray> PerspectiveCamera::GenerateRandomRayFromLenArea(glm::vec2 coordinate, glm::vec3 standardRayDirection) const
+std::shared_ptr<Ray> PerspectiveCamera::GenerateRandomRayFromLenArea(glm::vec2 coordinate) const
 {
     // Assume focal plane is at focalPlaneZ
     float focalPlaneZ = 3.5;
     // Assume the radius of len is 0.5
-    float lenRadius = 0.05;
+    float lenRadius = 0.1;
     // image plane will exist and how large it is assuming we know for sure that z = 1 (this is fairly arbitrary for now).
     const float planeHeight = std::tan(fov / 2.f) * 2.f;
     const float planeWidth = planeHeight * aspectRatio;
@@ -49,16 +49,14 @@ std::shared_ptr<Ray> PerspectiveCamera::GenerateRandomRayFromLenArea(glm::vec2 c
     glm::vec3 focalPoint = center + glm::vec3(GetForwardDirection()) * focalPlaneZ + glm::vec3(GetRightDirection()) * xOffset * focalPlaneZ + glm::vec3(GetUpDirection()) * yOffset * focalPlaneZ;
      
     // generate a random point in the circular area of the len
-    float u1=1.0f * std::rand()/RAND_MAX *lenRadius;
-    float u2=1.0f * std::rand()/RAND_MAX *lenRadius;
-    float r=std::sqrt(u1);
-    float theta=2*PI*u2;
+    float r=1.f*std::rand()/RAND_MAX*lenRadius;
+    float theta=2*PI*1.f*std::rand()/RAND_MAX;
     float x=r*std::cos(theta);
     float y=r*std::sin(theta);
     // world space to camera space
     glm::vec3 rayOrigin = center + glm::vec3(GetRightDirection()) * x + glm::vec3(GetUpDirection()) * y;
     // the random Ray Direction
-    glm::vec3 rayDirection = focalPoint - rayOrigin;
+    glm::vec3 rayDirection = glm::normalize(focalPoint - rayOrigin);
     return std::make_shared<Ray>(rayOrigin + rayDirection * zNear, rayDirection, zFar - zNear);
 }
 

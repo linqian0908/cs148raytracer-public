@@ -8,7 +8,7 @@ public:
     // inputFov is in degrees. 
     PerspectiveCamera(float aspectRatio, float inputFov);
     virtual std::shared_ptr<class Ray> GenerateRayForNormalizedCoordinates(glm::vec2 coordinate) const override;
-    virtual std::shared_ptr<class Ray> GenerateRandomRayFromLenArea(glm::vec2 coordinate, glm::vec3 standardRayDirection) const override;
+    virtual std::shared_ptr<class Ray> GenerateRandomRayFromLenArea(glm::vec2 coordinate) const override;
     
     void SetZNear(float input);
     void SetZFar(float input);
