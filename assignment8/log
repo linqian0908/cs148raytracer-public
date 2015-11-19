@@ -1,0 +1,26 @@
+Auto-merging assignment5/Assignment5.cpp
+Merge made by the 'recursive' strategy.
+ assets/CornellBox/CornellBox-Assignment8.mtl       |  82 ++++++++++
+ assets/CornellBox/CornellBox-Assignment8.obj       | 170 +++++++++++++++++++++
+ assets/CornellBox/CornellBox-Original.mtl          |   8 -
+ assignment5/Assignment5.cpp                        |   3 +-
+ assignment8/Assignment8.cpp                        |  82 ++++++++++
+ assignment8/Assignment8.h                          |  17 +++
+ .../UniformGrid/Internal/VoxelGrid.cpp             |   2 +-
+ common/RayTracer.cpp                               |   1 -
+ common/Rendering/Material/Material.cpp             |   8 +-
+ common/Rendering/Material/Material.h               |   3 +
+ .../Scene/Camera/Perspective/PerspectiveCamera.cpp |  14 +-
+ .../Scene/Camera/Perspective/PerspectiveCamera.h   |   6 +
+ common/Scene/Lights/Area/AreaLight.cpp             |  46 ++++++
+ common/Scene/Lights/Area/AreaLight.h               |  22 +++
+ common/core.h                                      |   1 +
+ main.cpp                                           |   2 +-
+ 16 files changed, 452 insertions(+), 15 deletions(-)
+ create mode 100644 assets/CornellBox/CornellBox-Assignment8.mtl
+ create mode 100644 assets/CornellBox/CornellBox-Assignment8.obj
+ create mode 100644 assignment8/Assignment8.cpp
+ create mode 100644 assignment8/Assignment8.h
+ create mode 100644 common/Scene/Lights/Area/AreaLight.cpp
+ create mode 100644 common/Scene/Lights/Area/AreaLight.h
+

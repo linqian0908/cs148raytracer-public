@@ -53,7 +53,7 @@ void RayTracer::Run()
                 // Construct ray, send it out into the scene and see what we hit.
                 std::shared_ptr<Ray> cameraRay = currentCamera->GenerateRayForNormalizedCoordinates(normalizedCoordinates);
                 assert(cameraRay);
-
+/* original 
                 IntersectionState rayIntersection(storedApplication->GetMaxReflectionBounces(), storedApplication->GetMaxRefractionBounces());
                 bool didHitScene = currentScene->Trace(cameraRay.get(), &rayIntersection);
 
@@ -62,6 +62,24 @@ void RayTracer::Run()
                 if (didHitScene) {
                     sampleColor = currentRenderer->ComputeSampleColor(rayIntersection, *cameraRay.get());
                 }
+*/
+                /* Begin of the Depth of field */
+                // depth of field
+                glm::vec3 sampleColor;
+                int sampleTimes = 50;
+                for (int i = 0; i < sampleTimes; i++) {
+                    std::shared_ptr<Ray> randomRay = currentCamera->GenerateRandomRayFromLenArea(normalizedCoordinates, cameraRay->GetRayDirection());
+                    assert(randomRay);
+                    IntersectionState rayIntersection(storedApplication->GetMaxReflectionBounces(), storedApplication->GetMaxRefractionBounces());
+                    bool didHitScene = currentScene->Trace(randomRay.get(), &rayIntersection);
+                    // Use the intersection data to compute the BRDF response.
+                    if (didHitScene) {
+                        sampleColor += currentRenderer->ComputeSampleColor(rayIntersection, *randomRay.get());
+                    }
+                }
+                // take the average of the sampling colors
+                sampleColor = glm::vec3(sampleColor.x / sampleTimes, sampleColor.y / sampleTimes,sampleColor.z / sampleTimes);
+                /* End of DOF */                
                 return sampleColor;
             }), c, r);
         }
@@ -76,3 +94,5 @@ void RayTracer::Run()
     // Save image.
     imageWriter.SaveImage();
 }
+
+
