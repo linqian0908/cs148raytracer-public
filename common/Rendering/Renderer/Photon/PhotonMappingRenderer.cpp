@@ -73,10 +73,10 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
     assert(photonRay);
     IntersectionState state(0, 0);
     state.currentIOR = currentIOR;
-    
     /* my code starts here */
     if (remainingBounces>=0) {
-        if (storedScene->Trace(photonRay,&state)) {// intersecting Scene object
+        storedScene->Trace(photonRay,&state);
+        if (state.hasIntersection) {// intersecting Scene object
             const glm::vec3 intersectionPoint=state.intersectionRay.GetRayPosition(state.intersectionT);
             
             if (path.size()>1) {// store photon
@@ -100,32 +100,31 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
                 float u1=std::rand()*1.f/RAND_MAX;
                 float u2=std::rand()*1.f/RAND_MAX;
                 float r=std::sqrt(u1);
-                float theta=2*3.14159*u2;
+                float theta=2*PI*u2;
                 float x=r*std::cos(theta);
                 float y=r*std::sin(theta);
-                float z=r*std::sqrt(1-u1);
+                float z=std::sqrt(1-u1);
                 // hemisphere ray transformation
                 glm::vec3 n=state.ComputeNormal();
                 glm::vec3 t;
                 glm::vec3 b;
-                if (n.x>0.9f) {
-                    t=glm::vec3(0.0,n.z,-n.y);
-                    b=glm::vec3(-n.z*n.z-n.y*n.y,n.x*n.y,n.x*n.z);
+                if (std::abs(n.x)<0.9f) {
+                    t=glm::normalize(glm::vec3(0.0,n.z,-n.y));
+                    b=glm::normalize(glm::vec3(-n.z*n.z-n.y*n.y,n.x*n.y,n.x*n.z));
                 }
                 else {
-                    t=glm::vec3(-n.z,0.0,n.x);
-                    b=glm::vec3(n.x*n.y,-n.x*n.x-n.z*n.z,n.z*n.y);
+                    t=glm::normalize(glm::vec3(-n.z,0.0,n.x));
+                    b=glm::normalize(glm::vec3(n.x*n.y,-n.x*n.x-n.z*n.z,n.z*n.y));
                 }
                 const glm::vec3 rayDirection=glm::normalize(glm::vec3(x*t.x+y*t.y+z*t.z,x*b.x+y*b.y+z*b.z,x*n.x+y*n.y+z*n.z));
-                photonRay->SetRayDirection(rayDirection);
+                photonRay->SetRayDirection(rayDirection); 
                 const glm::vec3 rayPosition=intersectionPoint+n*LARGE_EPSILON;
                 photonRay->SetRayPosition(rayPosition);            
                 path.push_back('S');
                 PhotonMappingRenderer::TracePhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
            }
        }
-   }         
-                
+   }            
 }
 
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const
