@@ -67,7 +67,7 @@ void RayTracer::Run()
                 /* Begin of the Depth of field */
                 // depth of field
                 glm::vec3 sampleColor;
-                int sampleTimes = 50;
+                int sampleTimes = 200;
                 for (int i = 0; i < sampleTimes; i++) {
                     std::shared_ptr<Ray> randomRay = currentCamera->GenerateRandomRayFromLenArea(normalizedCoordinates);
                     assert(randomRay);
@@ -76,10 +76,8 @@ void RayTracer::Run()
                     // Use the intersection data to compute the BRDF response.
                     if (didHitScene) {
                         sampleColor += currentRenderer->ComputeSampleColor(rayIntersection, *randomRay.get());
-                        //std::cout<<sampleColor.x<<", "<<sampleColor.y<<", "<<sampleColor.z<<std::endl;
                     }
                 }
-                //std::cout<<"====="<<std::endl;
                 // take the average of the sampling colors
                 sampleColor = glm::vec3(sampleColor.x / sampleTimes, sampleColor.y / sampleTimes,sampleColor.z / sampleTimes);
                 /* End of DOF */                
