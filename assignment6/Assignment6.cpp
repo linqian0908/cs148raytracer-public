@@ -45,7 +45,6 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
             accelerator->SetNodesOnLeaves(2);
         });
 
-
         newScene->AddSceneObject(cubeSceneObject);
     }
 
