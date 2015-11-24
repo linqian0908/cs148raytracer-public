@@ -9,6 +9,9 @@
 #include "common/Rendering/Renderer.h"
 
 #include "common/Scene/Geometry/Primitives/Triangle/Triangle.h"
+
+#define DOF_ON 0
+
 RayTracer::RayTracer(std::unique_ptr<class Application> app):
     storedApplication(std::move(app))
 {
@@ -49,24 +52,11 @@ void RayTracer::Run()
 
                 glm::vec2 normalizedCoordinates(static_cast<float>(c) + sampleOffset.x, static_cast<float>(r) + sampleOffset.y);
                 normalizedCoordinates /= currentResolution;
-
+                
+                glm::vec3 sampleColor;
                 // Construct ray, send it out into the scene and see what we hit.
-/* original: direct sampling
-                std::shared_ptr<Ray> cameraRay = currentCamera->GenerateRayForNormalizedCoordinates(normalizedCoordinates);
-                assert(cameraRay);
- 
-                IntersectionState rayIntersection(storedApplication->GetMaxReflectionBounces(), storedApplication->GetMaxRefractionBounces());
-                bool didHitScene = currentScene->Trace(cameraRay.get(), &rayIntersection);
-
-                // Use the intersection data to compute the BRDF response.
-                glm::vec3 sampleColor;
-                if (didHitScene) {
-                    sampleColor = currentRenderer->ComputeSampleColor(rayIntersection, *cameraRay.get());
-                }
- end original */
+#if DOF_ON
                 /* Begin of the Depth of field */
-                // depth of field
-                glm::vec3 sampleColor;
                 int sampleTimes = 200;
                 for (int i = 0; i < sampleTimes; i++) {
                     std::shared_ptr<Ray> randomRay = currentCamera->GenerateRandomRayFromLenArea(normalizedCoordinates);
@@ -80,7 +70,19 @@ void RayTracer::Run()
                 }
                 // take the average of the sampling colors
                 sampleColor = glm::vec3(sampleColor.x / sampleTimes, sampleColor.y / sampleTimes,sampleColor.z / sampleTimes);
-                /* End of DOF */                
+                /* End of DOF */  
+#else
+                std::shared_ptr<Ray> cameraRay = currentCamera->GenerateRayForNormalizedCoordinates(normalizedCoordinates);
+                assert(cameraRay);
+ 
+                IntersectionState rayIntersection(storedApplication->GetMaxReflectionBounces(), storedApplication->GetMaxRefractionBounces());
+                bool didHitScene = currentScene->Trace(cameraRay.get(), &rayIntersection);
+
+                // Use the intersection data to compute the BRDF response.                
+                if (didHitScene) {
+                    sampleColor = currentRenderer->ComputeSampleColor(rayIntersection, *cameraRay.get());
+                } 
+#endif             
                 return sampleColor;
             }), c, r);
         }
