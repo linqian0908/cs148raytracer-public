@@ -11,12 +11,12 @@
 #include "common/Rendering/Material/Material.h"
 #include "glm/gtx/component_wise.hpp"
 
-#define VISUALIZE_PHOTON_MAPPING 1
+#define VISUALIZE_PHOTON_MAPPING 0
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000),
-    maxPhotonBounces(1000)
+    diffusePhotonNumber(100000),
+    maxPhotonBounces(10)
 {
     srand(static_cast<unsigned int>(time(NULL)));
 }
@@ -37,7 +37,7 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
         if (!currentLight) {
             continue;
         }
-        totalLightIntensity = glm::length(currentLight->GetLightColor());
+        totalLightIntensity += glm::length(currentLight->GetLightColor());
     }
 
     // Shoot photons -- number of photons for light is proportional to the light's intensity relative to the total light intensity of the scene.
@@ -92,6 +92,7 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
             const MeshObject* hitMeshObject=state.intersectedPrimitive->GetParentMeshObject();
             const Material* hitMaterial=hitMeshObject->GetMaterial();
             glm::vec3 d=hitMaterial->GetBaseDiffuseReflection();
+            
             float pr=std::max(d.x,d.y);
             pr=std::max(pr,d.z);
             float r=std::rand()*1.f/RAND_MAX;
@@ -121,6 +122,11 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
                 const glm::vec3 rayPosition=intersectionPoint+n*LARGE_EPSILON;
                 photonRay->SetRayPosition(rayPosition);            
                 path.push_back('S');
+                // rescale color of scattered photon
+                float totalDiffuse=d.x+d.y+d.z;
+                lightIntensity.x *= d.x/totalDiffuse;
+                lightIntensity.y *= d.y/totalDiffuse;
+                lightIntensity.z *= d.z/totalDiffuse;
                 PhotonMappingRenderer::TracePhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
            }
        }
@@ -130,16 +136,37 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const
 {
     glm::vec3 finalRenderColor = BackwardRenderer::ComputeSampleColor(intersection, fromCameraRay);
-#if VISUALIZE_PHOTON_MAPPING
+
     Photon intersectionVirtualPhoton;
     intersectionVirtualPhoton.position = intersection.intersectionRay.GetRayPosition(intersection.intersectionT);
 
     std::vector<Photon> foundPhotons;
-    diffuseMap.find_within_range(intersectionVirtualPhoton, 0.003f, std::back_inserter(foundPhotons));
+    float sampleRadius=0.1f;
+    diffuseMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));
     if (!foundPhotons.empty()) {
+#if VISUALIZE_PHOTON_MAPPING
         finalRenderColor += glm::vec3(1.f, 0.f, 0.f);
-    }
+#else
+        Photon samplePhoton;
+        glm::vec3 sampleColor;
+        
+        const MeshObject* parentObject = intersection.intersectedPrimitive->GetParentMeshObject();
+        assert(parentObject);
+        const Material* objectMaterial = parentObject->GetMaterial();
+        assert(objectMaterial);
+        
+        for (size_t s=0; s<foundPhotons.size(); s++) {
+            samplePhoton=foundPhotons[s];
+            const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, samplePhoton.intensity, samplePhoton.toLightRay, fromCameraRay,1.f);
+            sampleColor += brdfResponse;
+        }
+        sampleColor /= (0.05*PI*sampleRadius*sampleRadius); 
+        //std::cout << foundPhotons.size() << std::endl;
+        //std::cout << sampleColor.x << ", " << sampleColor.y << ", " << sampleColor.z << std::endl;
+        //std::cout << finalRenderColor.x << ", " << finalRenderColor.y << ", " << finalRenderColor.z << std::endl;
+        finalRenderColor += sampleColor;
 #endif
+    }
     return finalRenderColor;
 }
 

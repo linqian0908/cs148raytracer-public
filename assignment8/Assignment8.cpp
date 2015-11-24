@@ -35,30 +35,33 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
     newScene->AddSceneObject(cubeSceneObject);
 
     // Lights
-    std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();
+    std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();  
+    //std::shared_ptr<AreaLight> pointLight = std::make_shared<AreaLight>(glm::vec2(0.5f, 0.5f));
+    //pointLight->SetSamplerAttributes(glm::vec3(3.f, 3.f, 1.f), 9);
     pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.97028f));
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
     newScene->AddLight(pointLight);
-
+    
     return newScene;
 
 }
 std::shared_ptr<ColorSampler> Assignment8::CreateSampler() const
 {
     std::shared_ptr<JitterColorSampler> jitter = std::make_shared<JitterColorSampler>();
-    jitter->SetGridSize(glm::ivec3(1, 1, 1));
+    jitter->SetGridSize(glm::ivec3(2, 2, 1));
     return jitter;
 }
 
 std::shared_ptr<class Renderer> Assignment8::CreateRenderer(std::shared_ptr<Scene> scene, std::shared_ptr<ColorSampler> sampler) const
 {
-    return std::make_shared<BackwardRenderer>(scene, sampler);
+    //return std::make_shared<BackwardRenderer>(scene, sampler);
+    return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
 
 int Assignment8::GetSamplesPerPixel() const
 {
     // ASSIGNMENT 5 TODO: Change the '1' here to increase the maximum number of samples used per pixel. (Part 1).
-    return 1; 
+    return 4; 
 }
 
 bool Assignment8::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)
