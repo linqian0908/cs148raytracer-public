@@ -37,6 +37,23 @@ float AreaLight::ComputeLightAttenuation(glm::vec3 origin) const
 
 void AreaLight::GenerateRandomPhotonRay(Ray& ray) const
 {
+    std::random_device rd;
+    std::unique_ptr<SamplerState> sampleState = sampler->CreateSampler(rd, 1, 2);
+    glm::vec3 sample = sampler->ComputeSampleCoordinate(*sampleState.get()) - 0.5f;
+    sample.x *= lightSize.x;
+    sample.y *= lightSize.y;
+    sample.z = 0.f;
+    const glm::vec3 lightPosition = glm::vec3(GetObjectToWorldMatrix() * glm::vec4(sample, 1.f));
+    ray.SetRayPosition(lightPosition);
+    
+    float x,y,z;
+    do {
+        x=std::rand()*2.f/RAND_MAX-1.f;
+        y=std::rand()*2.f/RAND_MAX-1.f;
+        z=std::rand()*2.f/RAND_MAX-1.f;       
+    } while ((x*x+y*y+z*z)>1.f);
+    const glm::vec3 rayDirection = glm::normalize(glm::vec3(x,y,z));
+    ray.SetRayDirection(rayDirection);
 }
 
 void AreaLight::SetSamplerAttributes(glm::ivec3 inputGridSize, int numSamples)
