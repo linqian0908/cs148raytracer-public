@@ -106,7 +106,7 @@ void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* phot
             const MeshObject* hitMeshObject=state.intersectedPrimitive->GetParentMeshObject();
             const Material* hitMaterial=hitMeshObject->GetMaterial();
             glm::vec3 d=hitMaterial->GetBaseDiffuseReflection();
-            
+
             float pr=std::max(d.x,d.y);
             pr=std::max(pr,d.z);
             float r=std::rand()*1.f/RAND_MAX;
