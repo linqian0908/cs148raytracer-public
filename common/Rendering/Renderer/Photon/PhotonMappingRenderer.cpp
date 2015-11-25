@@ -12,11 +12,12 @@
 #include "glm/gtx/component_wise.hpp"
 
 #define VISUALIZE_PHOTON_MAPPING 0
+#define CAUSTIC 0
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
     diffusePhotonNumber(1000000),
-    causticPhotonNumber(1000000),
+    causticPhotonNumber(100000),
     maxPhotonBounces(5)
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -26,8 +27,15 @@ void PhotonMappingRenderer::InitializeRenderer()
 {
     // Generate Photon Maps
     GenericPhotonMapGeneration(diffuseMap, diffusePhotonNumber,0);
-    GenericPhotonMapGeneration(causticMap, causticPhotonNumber,1);
     diffuseMap.optimise();
+    std::cout<<"finish initialize Global photon map"<<std::endl;
+#if CAUSTIC
+    GenericPhotonMapGeneration(causticMap, causticPhotonNumber,1);
+    causticMap.optimise():
+    std::cout<<"finish initialize Caustic photon map"<<std::endl;
+#endif
+
+    
 }
 
 void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons, int type)
@@ -127,7 +135,7 @@ void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* phot
                 photonRay->SetRayDirection(rayDirection); 
                 const glm::vec3 rayPosition=intersectionPoint+n*LARGE_EPSILON;
                 photonRay->SetRayPosition(rayPosition);            
-                path.push_back('S');
+                path.push_back('D');
                 // rescale color of scattered photon
                 lightIntensity.x *= d.x/pr;
                 lightIntensity.y *= d.y/pr;
@@ -161,7 +169,7 @@ bool PhotonMappingRenderer::TraceCausticPhoton(PhotonKdtree& photonMap, Ray* pho
         const glm::vec3 intersectionPoint=state.intersectionRay.GetRayPosition(state.intersectionT);
         const glm::vec3 normal=state.ComputeNormal();
         // hit diffusive object after specular object: add photon to map
-        if (path.size()>1 && (hitMaterial->HasDiffuseReflection() || hitMaterial->HasSpecularReflection())) {// store photon
+        if (path.size()>1 && hitMaterial->HasDiffuseReflection()) {// store photon
             StorePhoton(photonMap,intersectionPoint,lightIntensity,photonRay,normal);
         }
         
@@ -200,7 +208,10 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
     std::vector<Photon> foundPhotons;
     float sampleRadius=0.03f;
     diffuseMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));    
+#if CAUSTIC
     causticMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));
+#endif
+
     if (!foundPhotons.empty()) {
 #if VISUALIZE_PHOTON_MAPPING
         finalRenderColor += glm::vec3(1.f, 0.f, 0.f);

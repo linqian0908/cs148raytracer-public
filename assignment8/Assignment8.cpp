@@ -18,6 +18,7 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
     cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
     cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
+    cubeMaterial->SetReflectivity(0.3f);
 
     // Objects
     std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
@@ -71,12 +72,12 @@ bool Assignment8::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleInd
 
 int Assignment8::GetMaxReflectionBounces() const
 {
-    return 0;
+    return 4;
 }
 
 int Assignment8::GetMaxRefractionBounces() const
 {
-    return 0;
+    return 2;
 }
 
 glm::vec2 Assignment8::GetImageOutputResolution() const
