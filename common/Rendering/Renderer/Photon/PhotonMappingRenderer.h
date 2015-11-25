@@ -15,15 +15,20 @@ public:
     glm::vec3 ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const override;
 
     void SetNumberOfDiffusePhotons(int diffuse);
+    void SetNumberOfCausticPhotons(int caustic);
 private:
     using PhotonKdtree = KDTree::KDTree<3, Photon, PhotonAccessor>;
     PhotonKdtree diffuseMap;
-    //PhotonKdtree causticMap;
+    PhotonKdtree causticMap;
 
     int diffusePhotonNumber;
-    //int causticPhotonNumber;
+    int causticPhotonNumber;
     int maxPhotonBounces;
 
-    void GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons);
-    void TracePhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);
+    void GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons, int type);
+    void TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);    
+    bool TraceCausticPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);
+    void StorePhoton(PhotonKdtree& photonMap, glm::vec3 intersectionPoint, glm::vec3 intensity, Ray* photonRay, glm::vec3 normal);
+    void PerformRaySpecularReflection(Ray& outputRay, const Ray& inputRay, const glm::vec3& intersectionPoint, const float NdR, const IntersectionState& state) const;
+    void PerformRayRefraction(Ray& outputRay, const Ray& inputRay, const glm::vec3& intersectionPoint, const float NdR, const IntersectionState& state, float& targetIOR) const;
 };

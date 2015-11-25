@@ -16,8 +16,8 @@
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
     diffusePhotonNumber(1000000),
-    //causticPhotonNumber(1000000),
-    maxPhotonBounces(100)
+    causticPhotonNumber(1000000),
+    maxPhotonBounces(5)
 {
     srand(static_cast<unsigned int>(time(NULL)));
 }
@@ -25,12 +25,12 @@ PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene,
 void PhotonMappingRenderer::InitializeRenderer()
 {
     // Generate Photon Maps
-    GenericPhotonMapGeneration(diffuseMap, diffusePhotonNumber);
-    //GenericPhotonMapGeneration(causticMap, causticPhotonNumber);
+    GenericPhotonMapGeneration(diffuseMap, diffusePhotonNumber,0);
+    GenericPhotonMapGeneration(causticMap, causticPhotonNumber,1);
     diffuseMap.optimise();
 }
 
-void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons)
+void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons, int type)
 {
     float totalLightIntensity = 0.f;
     size_t totalLights = storedScene->GetTotalLights();
@@ -57,12 +57,21 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
             std::vector<char> path;
             path.push_back('L');
             currentLight->GenerateRandomPhotonRay(photonRay);
-            TracePhoton(photonMap, &photonRay, photonIntensity, path, 1.f, maxPhotonBounces);
+            switch (type) {
+                case 0:
+                    TraceGlobalPhoton(photonMap, &photonRay, photonIntensity, path, 1.f, maxPhotonBounces);
+                    break;
+                case 1:
+                    if(!TraceCausticPhoton(photonMap,&photonRay, photonIntensity, path, 1.f, maxPhotonBounces)) {
+                        j--;
+                    }
+                    break;
+            }
         }
     }
 }
 
-void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
+void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
 {
     /*
      * Assignment 7 TODO: Trace a photon into the scene and make it bounce.
@@ -82,13 +91,7 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
             const glm::vec3 intersectionPoint=state.intersectionRay.GetRayPosition(state.intersectionT);
             
             if (path.size()>1) {// store photon
-                Photon newPhoton;
-                newPhoton.position=intersectionPoint;
-                newPhoton.intensity=lightIntensity;
-                const Ray toLightRay=Ray(intersectionPoint,-photonRay->GetRayDirection());
-                newPhoton.toLightRay=toLightRay;
-                newPhoton.normal=state.ComputeNormal();
-                photonMap.insert(newPhoton);
+                StorePhoton(photonMap,intersectionPoint,lightIntensity,photonRay,state.ComputeNormal());
             }
     
             // photon scattering/absorption
@@ -126,14 +129,64 @@ void PhotonMappingRenderer::TracePhoton(PhotonKdtree& photonMap, Ray* photonRay,
                 photonRay->SetRayPosition(rayPosition);            
                 path.push_back('S');
                 // rescale color of scattered photon
-                float totalDiffuse=d.x+d.y+d.z;
-                lightIntensity.x *= d.x/totalDiffuse;
-                lightIntensity.y *= d.y/totalDiffuse;
-                lightIntensity.z *= d.z/totalDiffuse;
-                PhotonMappingRenderer::TracePhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
+                lightIntensity.x *= d.x/pr;
+                lightIntensity.y *= d.y/pr;
+                lightIntensity.z *= d.z/pr;
+                PhotonMappingRenderer::TraceGlobalPhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
            }
        }
    }            
+}
+
+bool PhotonMappingRenderer::TraceCausticPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
+{
+    assert(photonRay);
+    IntersectionState state(0, 0);
+    state.currentIOR = currentIOR;
+    
+    storedScene->Trace(photonRay,&state);
+    if (!state.hasIntersection) {
+        if (path.size()==1) {return false;}
+        else {return true;}
+    }
+    else {// intersecting Scene object
+        const MeshObject* hitMeshObject=state.intersectedPrimitive->GetParentMeshObject();
+        const Material* hitMaterial=hitMeshObject->GetMaterial(); 
+        
+        // first object hit is not a specular
+        if (path.size()==1 && !hitMaterial->IsReflective() && !hitMaterial->IsTransmissive()) {
+            return false;
+        }
+        
+        const glm::vec3 intersectionPoint=state.intersectionRay.GetRayPosition(state.intersectionT);
+        const glm::vec3 normal=state.ComputeNormal();
+        // hit diffusive object after specular object: add photon to map
+        if (path.size()>1 && (hitMaterial->HasDiffuseReflection() || hitMaterial->HasSpecularReflection())) {// store photon
+            StorePhoton(photonMap,intersectionPoint,lightIntensity,photonRay,normal);
+        }
+        
+        if (remainingBounces>=1) {
+            // decide whether to reflect and refract photon
+            path.push_back('S');
+            const float NdR = glm::dot(photonRay->GetRayDirection(), normal);
+            if (hitMaterial->IsReflective()) {
+                Ray reflectionRay;
+                PerformRaySpecularReflection(reflectionRay, *photonRay,intersectionPoint,NdR,state);
+                glm::vec3 ds=hitMaterial->GetBaseSpecularReflection();
+                const glm::vec3 reflectIntensity(ds.x*lightIntensity.x,ds.y*lightIntensity.y,ds.z*lightIntensity.z);
+                TraceCausticPhoton(photonMap, &reflectionRay, reflectIntensity, path, currentIOR, remainingBounces-1);
+            }
+            if (hitMaterial->IsTransmissive()) {
+                float targetIOR = (NdR < SMALL_EPSILON) ? hitMaterial->GetIOR():1.f;                
+                Ray refractionRay;
+                PerformRayRefraction(refractionRay, *photonRay,intersectionPoint,NdR,state,targetIOR);
+                glm::vec3 dt=hitMaterial->GetBaseTransmittance();
+                const glm::vec3 refractionIntensity(dt.x*lightIntensity.x,dt.y*lightIntensity.y,dt.z*lightIntensity.z);                
+                TraceCausticPhoton(photonMap, &refractionRay, refractionIntensity, path, targetIOR, remainingBounces-1);
+            }
+        }
+        return true;
+    }
 }
 
 glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionState& intersection, const class Ray& fromCameraRay) const
@@ -146,7 +199,8 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
 
     std::vector<Photon> foundPhotons;
     float sampleRadius=0.03f;
-    diffuseMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));
+    diffuseMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));    
+    causticMap.find_within_range(intersectionVirtualPhoton, sampleRadius, std::back_inserter(foundPhotons));
     if (!foundPhotons.empty()) {
 #if VISUALIZE_PHOTON_MAPPING
         finalRenderColor += glm::vec3(1.f, 0.f, 0.f);
@@ -164,13 +218,13 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
         for (size_t s=0; s<foundPhotons.size(); s++) {
             samplePhoton=foundPhotons[s];
             if (glm::dot(intersectNormal,samplePhoton.normal)>0.5) {//filtering by normal
-                const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, samplePhoton.intensity, samplePhoton.toLightRay, fromCameraRay,1.f);
+                const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, samplePhoton.intensity, samplePhoton.toLightRay, fromCameraRay, 1.f);
                 sampleColor += brdfResponse;
                 used++;
             }
             //else { std::cout << glm::dot(intersectNormal,samplePhoton.normal) << std::endl;}
         }
-        sampleColor /= (used*0.05*PI*sampleRadius*sampleRadius/foundPhotons.size()); 
+        sampleColor /= (used*PI*sampleRadius*sampleRadius/foundPhotons.size()); 
         //if (used<foundPhotons.size()) { std::cout << used << ", "<<foundPhotons.size() << std::endl;}
         //std::cout << sampleColor.x << ", " << sampleColor.y << ", " << sampleColor.z << std::endl;
         //std::cout << finalRenderColor.x << ", " << finalRenderColor.y << ", " << finalRenderColor.z << std::endl;
@@ -180,7 +234,38 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
     return finalRenderColor;
 }
 
+void PhotonMappingRenderer::StorePhoton(PhotonKdtree& photonMap, glm::vec3 intersectionPoint, glm::vec3 intensity, Ray* photonRay, glm::vec3 normal) {
+    Photon newPhoton;
+    newPhoton.position=intersectionPoint;
+    newPhoton.intensity=intensity;
+    const Ray toLightRay=Ray(intersectionPoint,-photonRay->GetRayDirection());
+    newPhoton.toLightRay=toLightRay;
+    newPhoton.normal=normal;
+    photonMap.insert(newPhoton);
+}
+
+void PhotonMappingRenderer::PerformRaySpecularReflection(Ray& outputRay, const Ray& inputRay, const glm::vec3& intersectionPoint, const float NdR, const IntersectionState& state) const
+{
+    const glm::vec3 normal = (NdR > SMALL_EPSILON) ? -1.f * state.ComputeNormal() : state.ComputeNormal();
+    const glm::vec3 reflectionDir = glm::reflect(inputRay.GetRayDirection(), normal);
+    outputRay.SetRayPosition(intersectionPoint + LARGE_EPSILON * state.ComputeNormal());
+    outputRay.SetRayDirection(reflectionDir);
+}
+
+void PhotonMappingRenderer::PerformRayRefraction(Ray& outputRay, const Ray& inputRay, const glm::vec3& intersectionPoint, const float NdR, const IntersectionState& state, float& targetIOR) const
+{
+    const glm::vec3 refractionDir = inputRay.RefractRay(state.ComputeNormal(), state.currentIOR, targetIOR);
+    outputRay.SetRayPosition(intersectionPoint + LARGE_EPSILON * state.ComputeNormal());
+    outputRay.SetRayDirection(refractionDir);
+}
+
+
 void PhotonMappingRenderer::SetNumberOfDiffusePhotons(int diffuse)
 {
     diffusePhotonNumber = diffuse;
+}
+
+void PhotonMappingRenderer::SetNumberOfCausticPhotons(int caustic)
+{
+    causticPhotonNumber = caustic;
 }
