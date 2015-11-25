@@ -18,12 +18,22 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
     cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
     cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
-    cubeMaterial->SetReflectivity(0.3f);
-
+    cubeMaterial->SetAmbient(glm::vec3(0.f,0.f,0.f));
+    
     // Objects
     std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
-    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Assignment8.obj", &loadedMaterials);
-    for (size_t i = 0; i < cubeObjects.size(); ++i) {
+    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Sphere.obj", &loadedMaterials);
+    std::cout<<cubeObjects.size()<<std::endl;
+    for (size_t i = 0; i < 2; ++i) {
+        std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
+        materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
+        materialCopy->SetTransmittance(0.7);
+        materialCopy->SetIOR(1.42f);
+        materialCopy->SetReflectivity(0.1);
+        cubeObjects[i]->SetMaterial(materialCopy);
+    }
+
+    for (size_t i = 2; i < cubeObjects.size(); ++i) {
         std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
         cubeObjects[i]->SetMaterial(materialCopy);
@@ -36,10 +46,10 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
     newScene->AddSceneObject(cubeSceneObject);
 
     // Lights
-    //std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();  
-    std::shared_ptr<AreaLight> pointLight = std::make_shared<AreaLight>(glm::vec2(0.5f, 0.5f));
-    pointLight->SetSamplerAttributes(glm::vec3(5.f, 5.f, 1.f), 25);
-    pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.97028f));
+    std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();  
+    //std::shared_ptr<AreaLight> pointLight = std::make_shared<AreaLight>(glm::vec2(0.5f, 0.5f));
+    //pointLight->SetSamplerAttributes(glm::vec3(5.f, 5.f, 1.f), 25);
+    pointLight->SetPosition(glm::vec3(-0.005f,-0.01f, 1.5328f));
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
     newScene->AddLight(pointLight);
     
@@ -55,8 +65,8 @@ std::shared_ptr<ColorSampler> Assignment8::CreateSampler() const
 
 std::shared_ptr<class Renderer> Assignment8::CreateRenderer(std::shared_ptr<Scene> scene, std::shared_ptr<ColorSampler> sampler) const
 {
-    //return std::make_shared<BackwardRenderer>(scene, sampler);
-    return std::make_shared<PhotonMappingRenderer>(scene, sampler);
+    return std::make_shared<BackwardRenderer>(scene, sampler);
+    //return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
 
 int Assignment8::GetSamplesPerPixel() const
@@ -72,12 +82,12 @@ bool Assignment8::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleInd
 
 int Assignment8::GetMaxReflectionBounces() const
 {
-    return 4;
+    return 2;
 }
 
 int Assignment8::GetMaxRefractionBounces() const
 {
-    return 2;
+    return 4;
 }
 
 glm::vec2 Assignment8::GetImageOutputResolution() const
