@@ -16,8 +16,8 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 
     // Material
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
-    cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
-    cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
+    cubeMaterial->SetDiffuse(glm::vec3(0.6f, 0.6f, 0.6f));
+    cubeMaterial->SetSpecular(glm::vec3(0.4f, 0.4f, 0.4f), 40.f);
     cubeMaterial->SetAmbient(glm::vec3(0.f,0.f,0.f));
     
     // Objects
@@ -65,14 +65,14 @@ std::shared_ptr<ColorSampler> Assignment8::CreateSampler() const
 
 std::shared_ptr<class Renderer> Assignment8::CreateRenderer(std::shared_ptr<Scene> scene, std::shared_ptr<ColorSampler> sampler) const
 {
-    return std::make_shared<BackwardRenderer>(scene, sampler);
-    //return std::make_shared<PhotonMappingRenderer>(scene, sampler);
+    //return std::make_shared<BackwardRenderer>(scene, sampler);
+    return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
 
 int Assignment8::GetSamplesPerPixel() const
 {
     // ASSIGNMENT 5 TODO: Change the '1' here to increase the maximum number of samples used per pixel. (Part 1).
-    return 4; 
+    return 1; 
 }
 
 bool Assignment8::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)

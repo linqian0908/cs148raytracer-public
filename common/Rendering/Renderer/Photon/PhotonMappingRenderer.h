@@ -23,6 +23,8 @@ private:
 
     int diffusePhotonNumber;
     int causticPhotonNumber;
+    int diffuseTotal;
+    int causticTotal;
     int maxPhotonBounces;
 
     void GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons, int type);

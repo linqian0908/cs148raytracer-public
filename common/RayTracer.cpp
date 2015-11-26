@@ -27,18 +27,21 @@ void RayTracer::Run()
     assert(currentScene && currentCamera && currentSampler && currentRenderer);
 
     currentSampler->InitializeSampler(storedApplication.get(), currentScene.get());
-
+    std::cout<<"RayTracer.run::finish scene setup"<<std::endl;
+    
     // Scene preprocessing -- generate acceleration structures, etc.
     // After this call, we are guaranteed that the "acceleration" member of the scene and all scene objects within the scene will be non-NULL.
     currentScene->GenerateDefaultAccelerationData();
     currentScene->Finalize();
 
     currentRenderer->InitializeRenderer();
-
+    std::cout<<"RayTracer.run::finish scene processing."<<std::endl;
+    
     // Prepare for Output
     const glm::vec2 currentResolution = storedApplication->GetImageOutputResolution();
     ImageWriter imageWriter(storedApplication->GetOutputFilename(), static_cast<int>(currentResolution.x), static_cast<int>(currentResolution.y));
-
+    std::cout<<"RayTracer.run::finish output prep."<<std::endl;
+    
     // Perform forward ray tracing
     const int maxSamplesPerPixel = storedApplication->GetSamplesPerPixel();
     assert(maxSamplesPerPixel >= 1);
@@ -87,7 +90,8 @@ void RayTracer::Run()
             }), c, r);
         }
     }
-
+    std::cout<<"RayTracer.run::finish pixel-wise ray tracing."<<std::endl;
+    
     // Apply post-processing steps (i.e. tone-mapper, etc.).
     storedApplication->PerformImagePostprocessing(imageWriter);
 
