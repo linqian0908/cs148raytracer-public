@@ -16,12 +16,12 @@ std::shared_ptr<Scene> Assignment5::CreateScene() const
 
     // Material
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
-    cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
+    cubeMaterial->SetDiffuse(glm::vec3(1.f, .8f, 0.f));
     cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
 
     // Objects
     std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
-    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Original.obj", &loadedMaterials);
+    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Glossy.obj", &loadedMaterials);
     for (size_t i = 0; i < cubeObjects.size(); ++i) {
         std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
@@ -37,7 +37,7 @@ std::shared_ptr<Scene> Assignment5::CreateScene() const
     // Lights
     std::shared_ptr<AreaLight> pointLight = std::make_shared<AreaLight>(glm::vec2(0.5f, 0.5f));
     pointLight->SetSamplerAttributes(glm::vec3(2.f, 2.f, 1.f), 4);
-    pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.97028f));
+    pointLight->SetPosition(glm::vec3(-0.005f,-0.01f, 1.5328f));
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
     newScene->AddLight(pointLight);
 
@@ -69,7 +69,7 @@ std::shared_ptr<class Renderer> Assignment5::CreateRenderer(std::shared_ptr<Scen
 int Assignment5::GetSamplesPerPixel() const
 {
     // ASSIGNMENT 5 TODO: Change the '1' here to increase the maximum number of samples used per pixel. (Part 1).
-    return 32; 
+    return 4; 
 }
 
 bool Assignment5::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleIndex)
@@ -79,12 +79,12 @@ bool Assignment5::NotifyNewPixelSample(glm::vec3 inputSampleColor, int sampleInd
 
 int Assignment5::GetMaxReflectionBounces() const
 {
-    return 0;
+    return 2;
 }
 
 int Assignment5::GetMaxRefractionBounces() const
 {
-    return 0;
+    return 4;
 }
 
 glm::vec2 Assignment5::GetImageOutputResolution() const

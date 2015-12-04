@@ -16,23 +16,25 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
 
     // Material
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
-    cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
-    cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
-    cubeMaterial->SetReflectivity(0.3f);
 
     // Objects
     std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
-    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Assignment6-Alt.obj", &loadedMaterials);
+    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Glossy.obj", &loadedMaterials);
     for (size_t i = 0; i < cubeObjects.size(); ++i) {
         std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
+        if (i==0) {
+            materialCopy->SetReflectivity(0.1f);
+        }
         cubeObjects[i]->SetMaterial(materialCopy);
 
         std::shared_ptr<SceneObject> cubeSceneObject = std::make_shared<SceneObject>();
         cubeSceneObject->AddMeshObject(cubeObjects[i]);
         cubeSceneObject->Rotate(glm::vec3(1.f, 0.f, 0.f), PI / 2.f);
         cubeSceneObject->CreateAccelerationData(AccelerationTypes::BVH);
-
+        
+        glm::vec3 p=glm::vec3(cubeSceneObject->GetPosition());
+        std::cout << i<<": "<<p.x<<", "<<p.y<<", "<<p.z<<std::endl;
         cubeSceneObject->ConfigureAccelerationStructure([](AccelerationStructure* genericAccelerator) {
             BVHAcceleration* accelerator = dynamic_cast<BVHAcceleration*>(genericAccelerator);
             accelerator->SetMaximumChildren(2);
@@ -50,7 +52,7 @@ std::shared_ptr<Scene> Assignment6::CreateScene() const
 
     // Lights
     std::shared_ptr<Light> pointLight = std::make_shared<PointLight>();
-    pointLight->SetPosition(glm::vec3(0.01909f, 0.0101f, 1.97028f));
+    pointLight->SetPosition(glm::vec3(-0.005f,-0.01f, 1.5328f));
     pointLight->SetLightColor(glm::vec3(1.f, 1.f, 1.f));
 
 // Assignment 6 Part 1 TODO: Change the '1' here.
@@ -79,7 +81,8 @@ std::shared_ptr<ColorSampler> Assignment6::CreateSampler() const
 
 std::shared_ptr<class Renderer> Assignment6::CreateRenderer(std::shared_ptr<Scene> scene, std::shared_ptr<ColorSampler> sampler) const
 {
-    return std::make_shared<BackwardRenderer>(scene, sampler);
+    //return std::make_shared<BackwardRenderer>(scene, sampler);
+    return std::make_shared<PhotonMappingRenderer>(scene, sampler);
 }
 
 int Assignment6::GetSamplesPerPixel() const

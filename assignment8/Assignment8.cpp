@@ -14,6 +14,7 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
 {
     std::shared_ptr<Scene> newScene = std::make_shared<Scene>();
 
+/* sphere
     // Material
     std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
     cubeMaterial->SetDiffuse(glm::vec3(0.6f, 0.6f, 0.6f));
@@ -38,13 +39,28 @@ std::shared_ptr<Scene> Assignment8::CreateScene() const
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
         cubeObjects[i]->SetMaterial(materialCopy);
     }
+*/
+// cube
+    // Material
+    std::shared_ptr<BlinnPhongMaterial> cubeMaterial = std::make_shared<BlinnPhongMaterial>();
+    cubeMaterial->SetDiffuse(glm::vec3(1.f, 1.f, 1.f));
+    cubeMaterial->SetSpecular(glm::vec3(0.6f, 0.6f, 0.6f), 40.f);
 
+    // Objects
+    std::vector<std::shared_ptr<aiMaterial>> loadedMaterials;
+    std::vector<std::shared_ptr<MeshObject>> cubeObjects = MeshLoader::LoadMesh("CornellBox/CornellBox-Assignment8.obj", &loadedMaterials);
+    for (size_t i = 0; i < cubeObjects.size(); ++i) {
+        std::shared_ptr<Material> materialCopy = cubeMaterial->Clone();
+        materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
+        cubeObjects[i]->SetMaterial(materialCopy);
+    }
+    
     std::shared_ptr<SceneObject> cubeSceneObject = std::make_shared<SceneObject>();
     cubeSceneObject->AddMeshObject(cubeObjects);
     cubeSceneObject->Rotate(glm::vec3(1.f, 0.f, 0.f), PI / 2.f);
     cubeSceneObject->CreateAccelerationData(AccelerationTypes::BVH);
     newScene->AddSceneObject(cubeSceneObject);
-
+  
     // Lights
     std::shared_ptr<PointLight> pointLight = std::make_shared<PointLight>();  
     //std::shared_ptr<AreaLight> pointLight = std::make_shared<AreaLight>(glm::vec2(0.5f, 0.5f));

@@ -1,6 +1,6 @@
 #include "common/RayTracer.h"
 
-#define ASSIGNMENT 8
+#define ASSIGNMENT 9
 #if ASSIGNMENT == 5
 #define APPLICATION Assignment5
 #include "assignment5/Assignment5.h"
@@ -13,6 +13,9 @@
 #elif ASSIGNMENT == 8
 #define APPLICATION Assignment8
 #include "assignment8/Assignment8.h"
+#elif ASSIGNMENT == 9
+#define APPLICATION Assignment9
+#include "assignment9/Assignment9.h"
 #endif
 
 #ifdef _WIN32

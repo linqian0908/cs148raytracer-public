@@ -15,8 +15,8 @@
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(10000),
-    causticPhotonNumber(1000),
+    diffusePhotonNumber(1000000),
+    causticPhotonNumber(0),
     maxPhotonBounces(5)
 {
     srand(static_cast<unsigned int>(time(NULL)));
@@ -227,7 +227,7 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
             }
             //else { std::cout << glm::dot(intersectNormal,samplePhoton.normal) << std::endl;}
         }
-        sampleColor /= (used*PI*sampleRadius*sampleRadius/foundPhotons.size()); 
+        sampleColor /= (0.05*(used+1)*PI*sampleRadius*sampleRadius/(foundPhotons.size()+1)); 
         //if (used<foundPhotons.size()) { std::cout << used << ", "<<foundPhotons.size() << std::endl;}
         //std::cout << sampleColor.x << ", " << sampleColor.y << ", " << sampleColor.z << std::endl;
         //std::cout << finalRenderColor.x << ", " << finalRenderColor.y << ", " << finalRenderColor.z << std::endl;

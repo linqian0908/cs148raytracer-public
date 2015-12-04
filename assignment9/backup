@@ -1,0 +1,79 @@
+switch (i) {
+            case 0: //grape
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                break;
+            case 20: // background
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                break;
+            case 6:  //table
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
+                break;
+            case 0:  //WINE BOTTLE
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
+                materialCopy->SetTransmittance(0.2);
+                break;
+            case 1:  //WINE laebl
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/wine_label.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/wine_label.jpg"));
+                break;                
+            case 2:  //WINE cork
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/cork.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/cork.jpg"));
+                break;
+            case 3:  //flame
+            case 4:
+            case 5:
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/candleflame.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/candleflame.jpg"));
+                break;
+            case 7:  //ball
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/red_ball.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/red_ball.jpg"));
+                break;
+            case 8:  //ball
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/golden_ball.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/golden_ball.jpg"));
+                break;
+            case 9:  //ball
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/purple_ball.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/purple_ball.jpg"));
+                break;
+            case 10:  // gift wrap
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/red_ball.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/red_ball.jpg"));
+                break;                
+            case 11:  // gift
+            case 12:
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
+                break;  
+            case 13:  // liquid
+            case 15:
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
+                materialCopy->SetTransmittance(0.2);
+                break; 
+            case 14:  // glass
+                materialCopy->SetTransmittance(0.9);
+                materialCopy->SetIOR(1.46);
+                break; 
+            case 16:  // bucket
+            case 17: // handle
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
+                break; 
+            case 18:  // candlebot
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
+                break;
+            case 19:  // candle
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/wax1.jpg"));
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/wax1.jpg"));
+                break;
+            default:
+                break;                
+        }
