@@ -69,9 +69,9 @@ glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersec
                         sampleRays[s].SetMaxT(sampleRays[s].GetMaxT()-state.intersectionT);
                         
                         glm::vec3 dt=hitMaterial->GetBaseTransmittance();
-                        color.x *= (1-dt.x);
-                        color.y *= (1-dt.y);
-                        color.z *= (1-dt.z);
+                        color.x *= std::sqrt(dt.x);
+                        color.y *= std::sqrt(dt.y);
+                        color.z *= std::sqrt(dt.z);
                     }
                 }
             } while(bounces>0);
@@ -82,7 +82,7 @@ glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersec
             
             const float lightAttenuation = light->ComputeLightAttenuation(intersectionPoint);
             // Note that the material should compute the parts of the lighting equation too.
-            const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, color, sampleRays[s], fromCameraRay, lightAttenuation);
+            const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection,color, sampleRays[s], fromCameraRay, lightAttenuation);
             sampleColor += brdfResponse;
         }
     }
