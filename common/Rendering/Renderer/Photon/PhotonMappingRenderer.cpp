@@ -16,7 +16,7 @@
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
     diffusePhotonNumber(100000),
-    causticPhotonNumber(0),
+    causticPhotonNumber(100000),
     maxPhotonBounces(5)
 {
     srand(static_cast<unsigned int>(time(NULL)));

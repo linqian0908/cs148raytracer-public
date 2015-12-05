@@ -41,13 +41,48 @@ glm::vec3 BackwardRenderer::ComputeSampleColor(const IntersectionState& intersec
 
         for (size_t s = 0; s < sampleRays.size(); ++s) {
             // note that max T should be set to be right before the light.
-            if (storedScene->Trace(&sampleRays[s], nullptr)) {
+            IntersectionState state(0,0);
+            bool didIntersect;
+            bool hit = false;
+            glm::vec3 color = light->GetLightColor();
+            float bounces=10;
+            do {
+                bounces--;               
+                didIntersect=storedScene->Trace(&sampleRays[s], &state);
+                if (!didIntersect) {
+                    break;
+                }
+                
+                else {
+                    const MeshObject* hitMesh = state.intersectedPrimitive->GetParentMeshObject();
+                    assert(hitMesh);
+                    const Material* hitMaterial = hitMesh->GetMaterial();
+                    assert(hitMaterial);
+                    
+                    if (!hitMaterial->IsTransmissive()) {
+                        hit=true;
+                        break;
+                    }
+                    else {
+                        const glm::vec3 hitPoint = state.intersectionRay.GetRayPosition(state.intersectionT);
+                        sampleRays[s].SetRayPosition(hitPoint+LARGE_EPSILON*sampleRays[s].GetRayDirection());
+                        sampleRays[s].SetMaxT(sampleRays[s].GetMaxT()-state.intersectionT);
+                        
+                        glm::vec3 dt=hitMaterial->GetBaseTransmittance();
+                        color.x *= (1-dt.x);
+                        color.y *= (1-dt.y);
+                        color.z *= (1-dt.z);
+                    }
+                }
+            } while(bounces>0);
+            
+            if (hit) {
                 continue;
             }
+            
             const float lightAttenuation = light->ComputeLightAttenuation(intersectionPoint);
-
             // Note that the material should compute the parts of the lighting equation too.
-            const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, light->GetLightColor(), sampleRays[s], fromCameraRay, lightAttenuation);
+            const glm::vec3 brdfResponse = objectMaterial->ComputeBRDF(intersection, color, sampleRays[s], fromCameraRay, lightAttenuation);
             sampleColor += brdfResponse;
         }
     }
