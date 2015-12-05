@@ -27,52 +27,60 @@ std::shared_ptr<Scene> Assignment9::CreateScene() const
         std::shared_ptr<Material> materialCopy = defaultMaterial->Clone();
         materialCopy->LoadMaterialFromAssimp(loadedMaterials[i]);
         switch(i) {
-            case 4: // grape leaf
+            case 9: // grape leaf
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/grape_leaf.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/grape_leaf.jpg"));
                 break;                          
-            case 7: // apple
+            case 1: // apple
+            case 12:
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/apple.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/apple.jpg"));
                 break;
-            case 8: //bucket
+            case 2: //bucket
                 materialCopy->SetReflectivity(0.2);
                 break;
-            case 9:  //WINE BOTTLE
+            case 13:  //WINE BOTTLE
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/winebottle.jpg"));
-                materialCopy->SetTransmittance(0.2);
-                break;
-            case 10:  //WINE laebl
+                materialCopy->SetTransmittance(0.6);
+                break;           
+            case 3:  // liquid
+                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/wine.jpg"));                
+                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/wine.jpg"));
+                materialCopy->SetTransmittance(0.9);
+                materialCopy->SetIOR(1.3);
+                break;           
+            case 14:  //WINE laebl
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/wine_label.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/wine_label.jpg"));
                 break;
-            case 11:  //WINE cork
+            case 15:  //WINE cork
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/cork.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/cork.jpg"));
                 break;
-            case 12:  //table
+            case 16:  //table
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
                 //materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
                 break;
-            case 13:  // glass
+            case 4:  // glass
                 materialCopy->SetTransmittance(0.9);
                 materialCopy->SetIOR(1.3);
                 break;
-            case 1:  // candlebot
-            case 2:
-                materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
-                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/metal_brown.jpg"));
-                break;
-            case 0:  // candle
-            case 14:
+            case 6:  // candlebot
+            case 7:
+                materialCopy->SetReflectivity(0.2);
+            case 5:  // candle
+            case 17:
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/wax.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/wax.jpg"));
                 break;
-            case 15: // background
+            case 0: // cube
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
                 materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/bg_gold.jpg"));
                 break;
+            case 8: // grape
+            case 10: // cake_tray pole
+            case 11: // cake_tray
             default:
                 break;
         }
@@ -98,12 +106,12 @@ std::shared_ptr<Scene> Assignment9::CreateScene() const
     newScene->AddLight(pointLight);
     
     pointLight = std::make_shared<DirectionalLight>();
-    pointLight->Rotate(glm::vec3(1.3f,-1.f,0),PI/6);
+    pointLight->Rotate(glm::vec3(1.2f,-1.f,0),PI/6);
     pointLight->SetLightColor(glm::vec3(.3f, .3f, .3f));
     newScene->AddLight(pointLight);
     
     pointLight = std::make_shared<DirectionalLight>();
-    pointLight->Rotate(glm::vec3(.7f,-1.f,0),PI/6);
+    pointLight->Rotate(glm::vec3(.8f,-1.f,0),PI/6);
     pointLight->SetLightColor(glm::vec3(.3f, .3f, .3f));
     newScene->AddLight(pointLight);
     
