@@ -15,7 +15,7 @@
 
 PhotonMappingRenderer::PhotonMappingRenderer(std::shared_ptr<class Scene> scene, std::shared_ptr<class ColorSampler> sampler):
     BackwardRenderer(scene, sampler), 
-    diffusePhotonNumber(1000000),
+    diffusePhotonNumber(100000),
     causticPhotonNumber(0),
     maxPhotonBounces(5)
 {
@@ -66,7 +66,9 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
             currentLight->GenerateRandomPhotonRay(photonRay);
             switch (type) {
                 case 0:
-                    TraceGlobalPhoton(photonMap, &photonRay, photonIntensity, path, 1.f, maxPhotonBounces);
+                    if (!TraceGlobalPhoton(photonMap, &photonRay, photonIntensity, path, 1.f, maxPhotonBounces)) {
+                        j--;
+                    }
                     break;
                 case 1:
                     if(!TraceCausticPhoton(photonMap,&photonRay, photonIntensity, path, 1.f, maxPhotonBounces)) {
@@ -78,7 +80,7 @@ void PhotonMappingRenderer::GenericPhotonMapGeneration(PhotonKdtree& photonMap, 
     }
 }
 
-void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
+bool PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
 {
     /*
      * Assignment 7 TODO: Trace a photon into the scene and make it bounce.
@@ -91,6 +93,7 @@ void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* phot
     assert(photonRay);
     IntersectionState state(0, 0);
     state.currentIOR = currentIOR;
+    bool flag=false;
     /* my code starts here */
     if (remainingBounces>=0) {
         storedScene->Trace(photonRay,&state);
@@ -100,6 +103,7 @@ void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* phot
             if (path.size()>1) {// store photon
                 StorePhoton(photonMap,intersectionPoint,lightIntensity,photonRay,state.ComputeNormal());
                 diffuseTotal++;
+                flag=true;
             }
     
             // photon scattering/absorption
@@ -140,10 +144,14 @@ void PhotonMappingRenderer::TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* phot
                 lightIntensity.x *= d.x/pr;
                 lightIntensity.y *= d.y/pr;
                 lightIntensity.z *= d.z/pr;
-                PhotonMappingRenderer::TraceGlobalPhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
-           }
-       }
-   }            
+                flag=flag || PhotonMappingRenderer::TraceGlobalPhoton(photonMap, photonRay, lightIntensity, path, currentIOR, remainingBounces-1);
+            }
+        }
+    }
+    else {
+        flag=true;
+    }
+    return flag;    
 }
 
 bool PhotonMappingRenderer::TraceCausticPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces)
@@ -227,10 +235,10 @@ glm::vec3 PhotonMappingRenderer::ComputeSampleColor(const struct IntersectionSta
             }
             //else { std::cout << glm::dot(intersectNormal,samplePhoton.normal) << std::endl;}
         }
-        sampleColor /= (0.05*(used+1)*PI*sampleRadius*sampleRadius/(foundPhotons.size()+1)); 
+        sampleColor /= (5*(used+1)*PI*sampleRadius*sampleRadius/(foundPhotons.size()+1)); 
         //if (used<foundPhotons.size()) { std::cout << used << ", "<<foundPhotons.size() << std::endl;}
-        //std::cout << sampleColor.x << ", " << sampleColor.y << ", " << sampleColor.z << std::endl;
-        //std::cout << finalRenderColor.x << ", " << finalRenderColor.y << ", " << finalRenderColor.z << std::endl;
+        //std::cout << "s: "<<sampleColor.x << ", " << sampleColor.y << ", " << sampleColor.z << std::endl;
+        //std::cout << "f: "<<finalRenderColor.x << ", " << finalRenderColor.y << ", " << finalRenderColor.z << std::endl;
         finalRenderColor += sampleColor;
 #endif
     }

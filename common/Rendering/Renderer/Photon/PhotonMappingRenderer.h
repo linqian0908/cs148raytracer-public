@@ -28,7 +28,7 @@ private:
     int maxPhotonBounces;
 
     void GenericPhotonMapGeneration(PhotonKdtree& photonMap, int totalPhotons, int type);
-    void TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);    
+    bool TraceGlobalPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);    
     bool TraceCausticPhoton(PhotonKdtree& photonMap, Ray* photonRay, glm::vec3 lightIntensity, std::vector<char>& path, float currentIOR, int remainingBounces);
     void StorePhoton(PhotonKdtree& photonMap, glm::vec3 intersectionPoint, glm::vec3 intensity, Ray* photonRay, glm::vec3 normal);
     void PerformRaySpecularReflection(Ray& outputRay, const Ray& inputRay, const glm::vec3& intersectionPoint, const float NdR, const IntersectionState& state) const;

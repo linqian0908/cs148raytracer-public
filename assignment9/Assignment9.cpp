@@ -53,11 +53,11 @@ std::shared_ptr<Scene> Assignment9::CreateScene() const
                 break;
             case 12:  //table
                 materialCopy->SetTexture("diffuseTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
-                materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
+                //materialCopy->SetTexture("specularTexture", TextureLoader::LoadTexture("textures/table_cloth.jpg"));
                 break;
             case 13:  // glass
-                materialCopy->SetTransmittance(0.9);
-                materialCopy->SetIOR(1.46);
+                materialCopy->SetTransmittance(0.95);
+                materialCopy->SetIOR(1.3);
                 break;
             case 1:  // candlebot
             case 2:
